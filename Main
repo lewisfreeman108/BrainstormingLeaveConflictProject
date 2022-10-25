@@ -1,0 +1,115 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace PlayingAround
+{
+    internal class Class1
+    {
+        public static readonly string[] companyNames = new string[] { " Envoy", "Example" };
+
+        public static void Main()
+        {
+
+            Temp();
+
+        }
+
+        public static void Temp()
+        {
+            List<LeaveRequest> leaveRequests = new List<LeaveRequest>();//Populate from somewhere else
+
+            List<Schedule> schedules = new List<Schedule>();
+
+            List<Schedule> schedulesAffectedByRequest = new List<Schedule>();
+
+
+
+            foreach (var leaveRequest in leaveRequests)
+            {
+                var employee = leaveRequest.Employee;
+
+                //Get all schedules between request start and end with employee and add it to list variable 
+                schedulesAffectedByRequest = schedules.Where(shedule => leaveRequest.StartDate > shedule.StartDate)
+                    .Where(s => leaveRequest.EndDate > s.EndDate)//What if null?
+                    .Where(c => c.Employee == leaveRequest.Employee)
+                    .ToList();
+
+                for (int i = 0; i < companyNames.Length; i++)
+                {
+                    int employeesScheduledToCompanyDuringRequestedLeave = schedules.GroupBy(s => s.Company).Select(s => s.Key == companyNames[i])
+                        .Count() - 1;
+
+                    if (employeesScheduledToCompanyDuringRequestedLeave < 2)
+                    {
+                        leaveRequest.ApprovalStatus = LeaveRequest.Status.Rejected;
+                        continue;
+                    }
+                }
+
+                leaveRequest.ApprovalStatus = LeaveRequest.Status.Approved;
+            }
+        }
+    }
+
+
+    struct Schedule
+    {
+        public Employee Employee { get; set; }   
+        public string Company { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+
+    }
+
+
+
+    class LeaveRequest
+    {
+        public Employee Employee { get; }
+
+        public DateTime StartDate { get; }
+
+        public DateTime EndDate { get; }
+
+        public enum Status { Approved, Rejected, Pending }
+
+        public Status ApprovalStatus = Status.Pending;
+
+        public LeaveRequest(Employee employee, DateTime startDate, DateTime endDate, Status approvalStatus)
+        {
+            Employee = employee;
+            StartDate = startDate;
+            EndDate = endDate;
+            ApprovalStatus = approvalStatus;
+        }
+    }
+
+    class Employee
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        public Employee()
+        {
+
+        }
+    }
+
+    class Company
+    {
+        public int Id { get; set; }
+        public string BusinessName { get; set; }
+
+        public Company()
+        {
+
+        }
+    }
+
+
+}
+
